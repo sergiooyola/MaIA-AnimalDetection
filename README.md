@@ -78,3 +78,6 @@ Este repositorio documenta el pipeline completo:
 3. Inferencia y validación: `InferenciaYolo10m-1024.ipynb`
 
 Las imágenes y resultados generados se encuentran organizados en las carpetas `yolo_tiles/` y `tiles_1024_jpg_q100/`.
+
+## Generacion de metricas comparativas con HerdNet
+Para obtener las metricas alineadas con HerdNet, se realizaron las inferencias sobre el dataset de test y con el modelo entrenado Yolov10M tiles: 1024. Se detalla en Yolo1024ComparaHerdnet.ipynb
