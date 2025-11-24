@@ -1,0 +1,10 @@
+path: general_dataset/general_dataset/yolo_tiles
+train: images/train
+val: images/val
+names:
+  0: Alcelaphinae
+  1: Buffalo
+  2: Kob
+  3: Warthog
+  4: Waterbuck
+  5: Elephant
