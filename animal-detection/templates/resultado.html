@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado</title>
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #eee;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            padding: 25px;
+            background: #1f1f1f;
+            color: #58a6ff;
+            margin: 0;
+        }
+        .container {
+            width: 85%;
+            margin: auto;
+            margin-top: 25px;
+        }
+        .card {
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0px 0px 10px #000;
+        }
+        img {
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            text-align: center;
+        }
+        th {
+            background: #272727;
+            color: #58a6ff;
+        }
+
+        /* ======== Estilos de los botones de tiles ======== */
+        .tile_btn {
+            width: 40px;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 0 8px #000;
+            transition: 0.2s;
+        }
+        .tile_btn:hover {
+            transform: scale(1.05);
+        }
+
+    </style>
+
+</head>
+<body>
+
+<h1>Resultado</h1>
+
+<div class="card" style="margin-top:20px;">
+
+    <h2>Métricas de Evaluación</h2>
+
+    <table style="width:100%; border-collapse: collapse; margin-top:15px;">
+        <tr>
+            <td><b>Conteo real:</b></td>
+            <td>{{ metrics.gt_count }}</td>
+        </tr>
+        <tr>
+            <td><b>Conteo predicho:</b></td>
+            <td>{{ metrics.pred_count }}</td>
+        </tr>
+        <tr>
+            <td><b>Accuracy:</b></td>
+            <td>{{ "%.3f"|format(metrics.accuracy) }}</td>
+        </tr>
+        <tr>
+            <td><b>MAE:</b></td>
+            <td>{{ "%.3f"|format(metrics.mae) }}</td>
+        </tr>
+        <tr>
+            <td><b>RMSE:</b></td>
+            <td>{{ "%.3f"|format(metrics.rmse) }}</td>
+        </tr>
+    </table>
+
+    <h3 style="margin-top:25px;">F1-score por clase</h3>
+
+    <table style="width:100%; border-collapse: collapse;">
+        <tr>
+            <th>Topi</th>
+            <th>Buffalo</th>
+            <th>Kob</th>
+            <th>Warthog</th>
+            <th>Waterbuck</th>
+            <th>Elephant</th>
+        </tr>
+        <tr>
+            {% for val in metrics.f1 %}
+                <td>{{ "%.3f"|format(val) }}</td>
+            {% endfor %}
+        </tr>
+    </table>
+
+</div>
+
+
+<div class="container">
+
+    <!-- Imagen resultante -->
+    <div class="card">
+        <h2>Imagen procesada</h2>
+
+        <img id="zoom_img" src="{{ url_for('static', filename=imagen) }}">
+
+        
+    </div>
+
+    <!-- Conteo por especie -->
+    <div class="card">
+        <h2>Conteo por especie detectado</h2>
+
+        <ul>
+            {% set counts = {} %}
+            {% for d in detecciones %}
+                {% if d.animal in counts %}
+                    {% set _ = counts.update({d.animal: counts[d.animal] + 1}) %}
+                {% else %}
+                    {% set _ = counts.update({d.animal: 1}) %}
+                {% endif %}
+            {% endfor %}
+
+            {% for especie, count in counts.items() %}
+                <li><b>{{ especie }}:</b> {{ count }}</li>
+            {% endfor %}
+        </ul>
+
+        <h3>Desglose real por especie:</h3>
+        <ul>
+            {% for especie, count in gt_species_count.items() %}
+                <li><b>{{ especie }}:</b> {{ count }}</li>
+            {% endfor %}
+        </ul>
+
+    </div>
+
+    <!-- Tabla de Detecciones (PRIMERO) -->
+    <div class="card">
+        <h2>Detecciones encontradas</h2>
+
+        <table>
+            <tr>
+                <th>Animal</th>
+                <th>Ubicación (x1,y1,x2,y2)</th>
+                <th>Probabilidad</th>
+            </tr>
+
+            {% for d in detecciones %}
+            <tr>
+                <td>{{ d.animal }}</td>
+                <td>{{ d.coords }}</td>
+                <td>{{ "%.2f"|format(d.conf) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- ================= HISTORIAL (DESPUÉS) ================= -->
+    <div class="card">
+        <h2>Historial reciente</h2>
+
+        <table>
+            <tr>
+                <th>Fecha</th>
+                <th>Imagen</th>
+                <th>#Predicciones</th>
+                <th>Accuracy</th>
+                <th>Overlap</th>
+            </tr>
+
+            {% for row in historial %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+
+        <!-- 🔥 BOTÓN PARA BORRAR HISTORIAL -->
+        <a href="/borrar_historial" style="
+            padding:12px 18px;
+            display:inline-block;
+            background:#d9534f;
+            color:#000;
+            border-radius:8px;
+            text-decoration:none;
+            font-weight:bold;
+            margin-top:15px;">
+            Borrar historial
+        </a>
+
+        <a href="/" style="
+            padding:12px 18px;
+            display:inline-block;
+            background:#58a6ff;
+            color:#000;
+            border-radius:8px;
+            text-decoration:none;
+            font-weight:bold;
+            margin-top:15px;">
+            Nueva predicción
+        </a>
+    </div>
+
+</div>
+
+<!-- ====================== ZOOM PROFESIONAL (PAN / ZOOM) ====================== -->
+<style>
+    #zoom_container {
+        position: relative;
+        overflow: hidden;
+        cursor: grab; /* MODO INICIAL = PAN */
+        border-radius: 12px;
+    }
+
+    #zoom_controls {
+        position: absolute;
+        bottom: 15px;
+        right: 0px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 20;
+    }
+
+    .zoom_btn {
+        background: rgba(0,0,0,0.6);
+        border: 1px solid #444;
+        color: #eee;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        font-size: 35px;
+        user-select: none;
+        transition: 0.2s;
+    }
+    .zoom_btn:hover { background: rgba(255,255,255,0.15); }
+
+    .mode_btn {
+        width: auto !important;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 14px !important;
+    }
+</style>
+
+<script>
+let scale = 1;
+let posX = 0, posY = 0;
+let dragging = false;
+let startX, startY;
+
+let mode = "pan";  // ⭐ MODO INICIAL: PAN (manito)
+
+const img = document.getElementById("zoom_img");
+img.style.transition = "transform 0.1s ease-out";
+
+const container = document.createElement("div");
+container.id = "zoom_container";
+img.parentNode.insertBefore(container, img);
+container.appendChild(img);
+updateCursor();   // 🔥 Activa correctamente el cursor inicial (PAN)
+
+
+// ------------------------------
+//      MANEJO DE PUNTEROS
+// ------------------------------
+function updateCursor() {
+    if (mode === "pan") {
+        container.style.cursor = dragging ? "grabbing" : "grab";
+    } else {
+        container.style.cursor = "zoom-in";
+    }
+}
+
+// ------------------------------
+//      ZOOM CON SCROLL
+// ------------------------------
+container.onwheel = (e) => {
+    e.preventDefault();
+
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    scale = Math.min(Math.max(scale + delta, 1), 5);
+    updateTransform();
+};
+
+// ------------------------------
+//      PAN SOLO EN MODO PAN
+// ------------------------------
+container.onmousedown = (e) => {
+    if (mode !== "pan") return;  // solo PAN en modo pan
+    dragging = true;
+    updateCursor();
+    startX = e.clientX - posX;
+    startY = e.clientY - posY;
+};
+container.onmouseup = () => {
+    dragging = false;
+    updateCursor();
+};
+container.onmouseleave = () => dragging = false;
+
+container.onmousemove = (e) => {
+    if (!dragging || mode !== "pan") return;
+    posX = e.clientX - startX;
+    posY = e.clientY - startY;
+    updateTransform();
+};
+
+// ------------------------------
+//      APLICAR TRANSFORMACIONES
+// ------------------------------
+function updateTransform() {
+    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+}
+
+// ------------------------------
+//      BOTONES
+// ------------------------------
+const controls = document.createElement("div");
+controls.id = "zoom_controls";
+
+controls.innerHTML = `
+    
+
+    <!-- CRUZ DE TILES -->
+    <div id="tiles-container" style="display:grid; grid-template-columns:repeat(3, 48px); gap:6px; margin-top:10px;">
+        <div></div>
+        <img src="{{ url_for('static', filename='tiles/up.png') }}" class="tile_btn">
+        <div></div>
+
+        <img src="{{ url_for('static', filename='tiles/left.png') }}" class="tile_btn">
+        <img src="{{ url_for('static', filename='tiles/center.png') }}" class="tile_btn">
+        <img src="{{ url_for('static', filename='tiles/right.png') }}" class="tile_btn">
+
+        <div></div>
+        <img src="{{ url_for('static', filename='tiles/down.png') }}" class="tile_btn">
+        <div></div>
+    </div>
+
+    <!-- BOTONES DE ZOOM -->
+    <div class="zoom_btn" id="zoom_in">＋</div>
+    <div class="zoom_btn" id="zoom_out">－</div>
+    <div class="zoom_btn" id="zoom_reset">⟳</div>
+`;
+
+container.appendChild(controls);
+
+// Cambiar modo PAN
+
+
+// Cambiar modo ZOOM
+
+
+// Botón +
+document.getElementById("zoom_in").onclick = () => {
+    scale = Math.min(scale + 0.2, 5);
+    updateTransform();
+};
+
+// Botón -
+document.getElementById("zoom_out").onclick = () => {
+    scale = Math.max(scale - 0.2, 1);
+    if (scale === 1) { posX = 0; posY = 0; }
+    updateTransform();
+};
+
+// Botón RESET
+document.getElementById("zoom_reset").onclick = () => {
+    scale = 1;
+    posX = 0;
+    posY = 0;
+    updateTransform();
+};
+</script>
+
+<!-- ====== AQUI PEGAS EL JS DE LOS TILES EN CRUZ ====== -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const tiles = {
+        up: document.querySelector("#tiles-container img:nth-child(2)"),
+        left: document.querySelector("#tiles-container img:nth-child(4)"),
+        center: document.querySelector("#tiles-container img:nth-child(5)"),
+        right: document.querySelector("#tiles-container img:nth-child(6)"),
+        down: document.querySelector("#tiles-container img:nth-child(8)")
+    };
+
+    // Cada clique mueve la imagen 120px en esa dirección
+    const STEP = 120;
+
+    if (!tiles.up) {
+        console.warn("❌ Tiles no encontrados. Verifica IDs.");
+        return;
+    }
+
+    tiles.up.onclick = () => {
+        posY += STEP;
+        updateTransform();
+    };
+
+    tiles.down.onclick = () => {
+        posY -= STEP;
+        updateTransform();
+    };
+
+    tiles.left.onclick = () => {
+        posX += STEP;
+        updateTransform();
+    };
+
+    tiles.right.onclick = () => {
+        posX -= STEP;
+        updateTransform();
+    };
+
+    tiles.center.onclick = () => {
+        // CENTRO → volver al origen manteniendo el zoom actual
+        posX = 0;
+        posY = 0;
+        updateTransform();
+    };
+});
+</script>
+<!-- ===================================================== -->
+
+
+</body>
+</html>

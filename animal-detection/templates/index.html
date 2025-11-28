@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de predicción y conteo de animales</title>
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #eee;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            padding: 25px;
+            background: #1f1f1f;
+            color: #58a6ff;
+            margin: 0 0 20px 0;
+        }
+        .card {
+            background: #1e1e1e;
+            width: 60%;
+            margin: auto;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 0px 10px #000;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: none;
+        }
+        button {
+            background: #58a6ff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* ===== MODAL DE CARGA ===== */
+        #loadingModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.86);
+            color: white;
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial;
+        }
+
+        /* Spinner */
+        #loadingSpinner {
+            margin-top: 20px;
+            width: 60px;
+            height: 60px;
+            border: 6px solid #444;
+            border-top-color: #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        .team {
+            text-align: center;
+            margin-top: -10px;
+            margin-bottom: 25px;
+            color: #bbb;
+            font-size: 16px;
+        }
+        .team h3 {
+            color: #58a6ff;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Sistema de predicción y conteo de animales</h1>
+
+<div class="team">
+    <h3>Desarrollado por:</h3>
+    <p>Julio Pachón Latorre</p>
+    <p>Hada Licette Sandoval</p>
+    <p>Sergio Oyola</p>
+    <p>Braulio Martínez</p>
+</div>
+
+<!-- ========== MODAL DE PROCESAMIENTO ========== -->
+<div id="loadingModal">
+    <h2>Procesando la imagen...</h2>
+    <p>Esto puede tardar unos minutos</p>
+
+    <div id="loadingSpinner"></div>
+</div>
+<!-- ============================================ -->
+
+<div class="card">
+    <form action="/procesar" method="POST" enctype="multipart/form-data" onsubmit="return startProcessing();">
+        <label><b>Subir imagen:</b></label>
+        <input type="file" name="imagen" required>
+
+        <label><b>Overlap:</b> <span id="ov_val">0</span></label>
+        <input type="range" min="0" max="280" step="20" name="overlap" id="overlap_slider">
+
+        <button type="submit">Procesar imagen</button>
+    </form>
+</div>
+
+</body>
+
+<script>
+/* ===== Actualización del valor del slider ===== */
+const slider = document.getElementById("overlap_slider");
+const label = document.getElementById("ov_val");
+label.textContent = slider.value;
+
+slider.addEventListener("input", () => {
+    label.textContent = slider.value;
+});
+
+/* ===== LÓGICA DEL MODAL ===== */
+let alreadySubmitting = false;
+
+function startProcessing() {
+    if (alreadySubmitting) return true;
+
+    alreadySubmitting = true;
+
+    document.getElementById("loadingModal").style.display = "flex";
+
+    setTimeout(() => {
+        document.querySelector("form").submit();
+    }, 150);
+
+    return false;
+}
+</script>
+
+</html>
